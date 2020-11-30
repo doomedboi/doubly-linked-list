@@ -16,20 +16,25 @@ bool is_smf(int _x, function func)
     return func(_x);
 }
 #include <fstream>
+bool ss(int x, int y) { return x > y; }
+#include <algorithm> 
 int main()
 {
     list::list l;
-    l.push_back(222);
+    l.push_back(777);
     l.push_back(333);
-    l.push_back(444);
+    l.push_back(555);
+    l.push_back(111);
     
-    l.insert_before(l.head->next, 111);
-    
-    l.print(std::cout,'\n');
-    
+    //TODO: erase + sort + "="
+     
+    l.print(std::cout, " ");
+    std::cout << "\n";
+
     //int p = 10;
     //std::cout << is_smf(p, [](int _x) { return _x < 10; });
-    //x.remove_if([](int x) { return (x > 5); });
+    l.remove_if([](int x) { return (x < 333); });
+    l.print(std::cout, " ");
     //std::cout << "here'";
     
     

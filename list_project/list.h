@@ -1,8 +1,5 @@
 #pragma once
 
-
-
-
 namespace list {
 	class list
 	{
@@ -26,10 +23,12 @@ namespace list {
 					_node = _node->next;
 				return *this;
 			}
+			
 			bool operator!=(const custom_iter& other) const { return _node != other._node; }
-			bool operator==(const custom_iter& other) const { !(*this != other); }
+			bool operator==(const custom_iter& other) const { return !(*this != other); }
 		};
-
+		
+		
 	public: 
 		Node* head, * tail;
 		size_t _size = 0;
@@ -58,8 +57,10 @@ namespace list {
 		~list() { destroy(); };
 
 
+
 		custom_iter begin() const { return custom_iter{ head }; }
 		custom_iter end()   const { return  custom_iter{ tail->next }; }
+		
 		
 		//+
 		bool empty() const 
@@ -231,6 +232,44 @@ namespace list {
 			for (auto elem : *this)
 				_Io << elem << _Sep;
 		}
+		//+i want it pub
+		void swap(list& other)
+		{
+			auto _tmpHead = this->head;
+			auto _tmpTail = this->tail;
+			this->head	  = other.head;
+			this->tail = other.tail;
+			other.head = _tmpHead;
+			other.tail = _tmpTail;
+		}
+		//+
+		void swap(Node* _fir, Node* _sec)
+		{
+			if (_fir == _sec)
+				return;
+			
+			auto oFirVal = _fir->val;
+			_fir->val = _sec->val;
+			_sec->val = oFirVal;
+
+		}
+		//
+		template <class _Predict >
+		void sort(_Predict _Pred)
+		{
+			auto _begin = head->next;
+			for (; _begin; _begin = _begin->next) {
+				auto _sorFornode = _begin;
+				while (_sorFornode->prev && _Pred(_sorFornode->prev->val, _sorFornode->val)) {
+					swap(_sorFornode, _sorFornode->prev);
+					_sorFornode = _sorFornode->prev;
+				}
+			}
+		}
 	};
 
+
 }
+
+
+	
