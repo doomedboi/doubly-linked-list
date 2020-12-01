@@ -11,12 +11,12 @@ int main()
 {
     std::ifstream in("input.txt");
     std::ofstream ou("output.txt");
-    list lst;
+    list lst{};
     int _res{};
     while (in >> _res && _res != EOF)
         lst.push_back(_res);
     
-    lst.remove_if([](int x) {return x > 10; });
+    lst.remove_if([](int x) {return x < 10000; });
     // or
     lst.remove_if(is_even);
     lst.print(ou, ' ');

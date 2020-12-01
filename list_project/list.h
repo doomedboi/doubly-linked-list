@@ -15,7 +15,7 @@ namespace nonstl {
 		};
 		/*We do not use third-party header files. 
 		If we want to use the initialization list and the compatibility of our iterator
-		with the STL iterators, we need to connect additional headers. e.g. <iterator>, initializer_list*/
+		with the STL iterators, we need to include additional headers. e.g. <iterator>, initializer_list*/
 		class custom_iter {
 			Node* _node;
 		public:
@@ -72,7 +72,7 @@ namespace nonstl {
 		}
 
 	public:
-		list()  { m_head = m_tail = nullptr; };
+		list()  { m_head = m_tail = nullptr; m_size = 0; };
 		~list() { clear(); };
 		list(const list& other)
 		{
@@ -180,11 +180,11 @@ namespace nonstl {
 				push_front(val);
 				return;
 			}
-			auto node		= new Node(val);
+			auto node			= new Node(val);
 			node->m_next		= tmp;
 			node->m_prev		= tmp->m_prev;
-			tmp->m_prev->m_next = node;
-			tmp->m_prev		= node;	
+			tmp->m_prev->m_next	= node;
+			tmp->m_prev			= node;	
 		}
 
 		// + original causes unbeh if tail doesn't exist
