@@ -1,26 +1,29 @@
 #pragma once
-
-namespace list {
+//TODO: replace the original int type to template - based type
+//then we will hold any type we ever want.
+namespace nonstl {
 	class list
 	{
 	private:
 		struct Node
 		{
-			int val;
-			Node* next, * prev;
-			Node(int param) { next = prev = nullptr; val = param; }
-			~Node() { next = prev = nullptr; };
+			int m_val;
+			Node* m_next, * m_prev;
+			Node(int param) { m_next  = m_prev = nullptr; m_val = param; }
+			~Node() { m_next = m_prev = nullptr; };
 
 		};
-
+		/*We do not use third-party header files. 
+		If we want to use the initialization list and the compatibility of our iterator
+		with the STL iterators, we need to connect additional headers. e.g. <iterator>, initializer_list*/
 		class custom_iter {
 			Node* _node;
 		public:
 			explicit custom_iter(Node* node = nullptr) : _node{ node } {}
-			int operator*() const { if (_node) return _node->val; }
+			int operator*() const { if (_node) return _node->m_val; }
 			custom_iter& operator++() {
 				if (_node)
-					_node = _node->next;
+					_node = _node->m_next;
 				return *this;
 			}
 			
@@ -30,153 +33,180 @@ namespace list {
 		
 		
 	public: 
-		Node* head, * tail;
-		size_t _size = 0;
+		Node  *m_head, * m_tail;
+		size_t m_size = 0;
 
 	private:
-		bool isborder(Node* node) const { return head == node || tail == node; }
-		bool ishead(Node* node)   const { return head == node; }
-		bool istail(Node* node)   const { return tail == node; }
-		//remove selected node
+		// no increment and etc.
+		list& operator++()				   = delete;
+		list& operator--()				   = delete;
+		list& operator*()				   = delete;
+		list& operator+(const list& other) = delete;
+	private:
+		bool ishead(Node* node) const { return m_head == node; }
+		bool istail(Node* node) const { return m_tail == node; }
+		//removes selected node
 		void remove(const Node* node)
 		{
-			if (node->prev)
-				node->prev->next = node->next;
+			if (node->m_prev)
+				node->m_prev->m_next = node->m_next;
 			else
-				head = node->next;
-			if (node->next)
-				node->next->prev = node->prev;
+				m_head = node->m_next;
+			if (node->m_next)
+				node->m_next->m_prev = node->m_prev;
 			else
-				tail = node->prev;
-			_size--;
+				m_tail = node->m_prev;
+			m_size--;
 			delete node;
 			node = nullptr;
 		}
+		void swap(Node* _fir, Node* _sec)
+		{
+			if (_fir == _sec)
+				return;
+
+			auto oFirVal = _fir->m_val;
+			_fir->m_val = _sec->m_val;
+			_sec->m_val = oFirVal;
+
+		}
+
 	public:
-		list() { head = tail = nullptr; };
-		~list() { destroy(); };
-
-
-
-		custom_iter begin() const { return custom_iter{ head }; }
-		custom_iter end()   const { return  custom_iter{ tail->next }; }
+		list()  { m_head = m_tail = nullptr; };
+		~list() { clear(); };
+		list(const list& other)
+		{
+			m_head = m_tail = nullptr;
+			for (auto _Elem : other)
+				push_back(_Elem);
+		}	//+
+		const list& operator=(const list& other)
+		{
+			if (this == &other)
+				return *this;
+			this->clear();
+			for (auto _Elem : other)
+				this->push_back(_Elem);
+			return *this;
+		}
 		
+		custom_iter begin() const { return  custom_iter{ m_head }; }
+		custom_iter end()   const { return  custom_iter{ m_tail->m_next }; }
 		
-		//+
 		bool empty() const 
 		{ 
-			return _size == 0; 
+			return m_size == 0; 
 		}
 		size_t size() const
 		{
-			return _size;
+			return m_size;
 		}
-		//+
-		void destroy()
+		
+		void clear()
 		{
-			while (head) {
-				auto tmp = head;
-				head = head->next;
+			while (m_head) {
+				auto tmp = m_head;
+				m_head = m_head->m_next;
 				delete tmp;
 			}
-			_size = 0;
+			m_size = 0;
 		}
 		//+
 		void pop_back()
 		{
-			if (tail) {
-				auto tmp = tail;
-				tail = tail->prev;
-				if (tail)
-					tail->next = nullptr;
+			if (m_tail) {
+				auto tmp = m_tail;
+				m_tail = m_tail->m_prev;
+				if (m_tail)
+					m_tail->m_next = nullptr;
 				else
-					head = nullptr;
+					m_head = nullptr;
 				delete tmp;
 			}
-			_size -= 1;
+			m_size -= 1;
 		}
 		//+
 		void pop_front()
 		{
-			if (head) {
-				auto tmp = head;
-				head = head->next;
-				if (head)
-					head->prev = nullptr;
+			if (m_head) {
+				auto tmp = m_head;
+				m_head = m_head->m_next;
+				if (m_head)
+					m_head->m_prev = nullptr;
 				else
-					tail = nullptr;
+					m_tail = nullptr;
 				delete tmp;
 			}
-			_size -= 1;
+			m_size -= 1;
 		}
 		// +
 		void push_front(int val) {
 			auto elem = new Node(val);
-			elem->prev = nullptr;
-			elem->next = head;
-			if (head)
-				head->prev = elem;
+			elem->m_prev = nullptr;
+			elem->m_next = m_head;
+			if (m_head)
+				m_head->m_prev = elem;
 			else
-				tail = elem;
-			head = elem;
-			_size++;
+				m_tail = elem;
+			m_head = elem;
+			m_size++;
 		}
 		// +
 		void push_back(int val) {
 			auto elem = new Node(val);
-			elem->prev = tail;
-			elem->next = nullptr;
-			if (tail)
-				tail->next = elem;
+			elem->m_prev = m_tail;
+			elem->m_next = nullptr;
+			if (m_tail)
+				m_tail->m_next = elem;
 			else
-				head = elem;
-			tail = elem;
-			_size++;
+				m_head = elem;
+			m_tail = elem;
+			m_size++;
 		}
 		// + doesn't any secure checks
 		void insert(const size_t idx, int val) {
-			size_t i{ 0 }; auto tmp = head;
-			for (; tmp && i < idx; tmp = tmp->next, i++)
+			size_t i{ 0 }; auto tmp = m_head;
+			for (; tmp && i < idx; tmp = tmp->m_next, i++)
 				;
 			if (!tmp)
 				return;
 
-			_size++;
-			if (!tmp->next) {
+			m_size++;
+			if (!tmp->m_next) {
 				push_back(val);
 				return;
 			}
-			if (!tmp->prev) {
+			if (!tmp->m_prev) {
 				push_front(val);
 				return;
 			}
 			auto node		= new Node(val);
-			node->next		= tmp;
-			node->prev		= tmp->prev;
-			tmp->prev->next = node;
-			tmp->prev		= node;	
+			node->m_next		= tmp;
+			node->m_prev		= tmp->m_prev;
+			tmp->m_prev->m_next = node;
+			tmp->m_prev		= node;	
 		}
 
 		// + original causes unbeh if tail doesn't exist
-		int& back() { return tail->val; }
-		//+
-		int const& back() const { return tail->val; }
-		//+
-		int& front() { return head->val; }
-		//+
-		int const& front() const { return head->val; }
-		//+
+		int& back() { return m_tail->m_val; }
+		// +
+		int const& back() const { return m_tail->m_val; }
+		// +
+		int& front() { return m_head->m_val; }
+		// +
+		int const& front() const { return m_head->m_val; }
+		// +
 		template <class predict>
 		void remove_if(predict pred)
 		{
-			auto _last = head;
+			auto _last = m_head;
 			while (_last) {
 				auto tmp = _last;
-				if (pred(_last->val)) {
-					_last = _last->next;
+				if (pred(_last->m_val)) {
+					_last = _last->m_next;
 					remove(tmp);
 				} else	
-					_last = _last->next;
+					_last = _last->m_next;
 			}
 		}
 		//+
@@ -187,14 +217,14 @@ namespace list {
 		// +
 		void remove_after(const Node* node)
 		{
-			if (node->next)
-				remove(node->next);
+			if (node->m_next)
+				remove(node->m_next);
 		}
 		// +
 		void remove_before(const Node* node)
 		{
-			if (node->prev)
-				remove(node->prev);
+			if (node->m_prev)
+				remove(node->m_prev);
 		}
 		// +
 		int  findf(const int& _Elem)
@@ -212,10 +242,10 @@ namespace list {
 				push_back(_Elem);
 			else {
 				auto nElem  = new Node{ _Elem };
-				nElem->prev = node;
-				nElem->next = node->next;
-				node->next  = nElem;
-				_size++;
+				nElem->m_prev = node;
+				nElem->m_next = node->m_next;
+				node->m_next  = nElem;
+				m_size++;
 			}
 		}
 		// +
@@ -224,7 +254,18 @@ namespace list {
 			if (ishead(node))
 				push_front(_Elem);
 			else 
-				insert_after(node->prev, _Elem);
+				insert_after(node->m_prev, _Elem);
+		}
+		// +
+		void erase(size_t idx)
+		{
+			size_t i = 0;
+			auto _begin = m_head;
+			for (i = 0; i < idx && _begin; _begin = _begin->m_next, i++)
+				;
+			if (!_begin)
+				return;
+			remove(_begin);
 		}
 		//param 1: stream | param 2: sep
 		template <class stream, class separator>
@@ -232,37 +273,27 @@ namespace list {
 			for (auto elem : *this)
 				_Io << elem << _Sep;
 		}
-		//+i want it pub
+		//
 		void swap(list& other)
 		{
-			auto _tmpHead = this->head;
-			auto _tmpTail = this->tail;
-			this->head	  = other.head;
-			this->tail = other.tail;
-			other.head = _tmpHead;
-			other.tail = _tmpTail;
+			auto _tmpHead = this->m_head;
+			auto _tmpTail = this->m_tail;
+			this->m_head  = other.m_head;
+			this->m_tail  = other.m_tail;
+			other.m_head  = _tmpHead;
+			other.m_tail  = _tmpTail;
 		}
-		//+
-		void swap(Node* _fir, Node* _sec)
-		{
-			if (_fir == _sec)
-				return;
-			
-			auto oFirVal = _fir->val;
-			_fir->val = _sec->val;
-			_sec->val = oFirVal;
-
-		}
-		//
+		
+		// insert sort-based sort
 		template <class _Predict >
 		void sort(_Predict _Pred)
 		{
-			auto _begin = head->next;
-			for (; _begin; _begin = _begin->next) {
+			auto _begin = m_head->m_next;
+			for (; _begin; _begin = _begin->m_next) {
 				auto _sorFornode = _begin;
-				while (_sorFornode->prev && _Pred(_sorFornode->prev->val, _sorFornode->val)) {
-					swap(_sorFornode, _sorFornode->prev);
-					_sorFornode = _sorFornode->prev;
+				while (_sorFornode->m_prev && _Pred(_sorFornode->m_prev->m_val, _sorFornode->m_val)) {
+					swap(_sorFornode, _sorFornode->m_prev);
+					_sorFornode = _sorFornode->m_prev;
 				}
 			}
 		}
@@ -270,6 +301,7 @@ namespace list {
 
 
 }
+
 
 
 	

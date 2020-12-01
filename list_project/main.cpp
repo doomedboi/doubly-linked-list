@@ -1,42 +1,28 @@
 
-#include <iostream>
 #include "list.h"
 
-//using namespace lists;
-
-#include <list>
-
-
-
 bool is_even(int _arg) { return _arg % 2 == 0; }
-
-template <class function>
-bool is_smf(int _x, function func)
-{
-    return func(_x);
-}
+bool sort_even(int _arg1, int _arg2) { return _arg1 % 3 < _arg2 % 4; }
 #include <fstream>
 bool ss(int x, int y) { return x > y; }
-#include <algorithm> 
+using namespace nonstl;
+
 int main()
 {
-    list::list l;
-    l.push_back(777);
-    l.push_back(333);
-    l.push_back(555);
-    l.push_back(111);
+    std::ifstream in("input.txt");
+    std::ofstream ou("output.txt");
+    list lst;
+    int _res{};
+    while (in >> _res && _res != EOF)
+        lst.push_back(_res);
     
-    //TODO: erase + sort + "="
-     
-    l.print(std::cout, " ");
-    std::cout << "\n";
-
-    //int p = 10;
-    //std::cout << is_smf(p, [](int _x) { return _x < 10; });
-    l.remove_if([](int x) { return (x < 333); });
-    l.print(std::cout, " ");
-    //std::cout << "here'";
+    lst.remove_if([](int x) {return x > 10; });
+    // or
+    lst.remove_if(is_even);
+    lst.print(ou, ' ');
     
-    
-    
+    lst.sort([](int x, int y) {return x > y; });
+    // or
+    lst.sort(sort_even);
+    /* and etc */
 }
