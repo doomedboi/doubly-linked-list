@@ -32,7 +32,7 @@ namespace nonstl {
 		};
 		
 		
-	public: 
+	private: 
 		Node  *m_head, * m_tail;
 		size_t m_size = 0;
 
@@ -268,20 +268,21 @@ namespace nonstl {
 			remove(_begin);
 		}
 		//param 1: stream | param 2: sep
-		template <class stream, class separator>
-		void print(stream& _Io, const separator& _Sep) {
+		template <class _Stream, class _Separator>
+		void print(_Stream& _Io, const _Separator& _Sep) {
+			if (m_size == 0) return;
 			for (auto elem : *this)
 				_Io << elem << _Sep;
 		}
 		//
 		void swap(list& other)
 		{
-			auto _tmpHead = this->m_head;
-			auto _tmpTail = this->m_tail;
-			this->m_head  = other.m_head;
-			this->m_tail  = other.m_tail;
-			other.m_head  = _tmpHead;
-			other.m_tail  = _tmpTail;
+			auto _tmpHead	  = this->m_head;
+			auto _tmpTail	  = this->m_tail;
+			this->m_head	  = other.m_head;
+			this->m_tail	  = other.m_tail;
+			other.m_head	  = _tmpHead;
+			other.m_tail	  = _tmpTail;
 		}
 		
 		// insert sort-based sort

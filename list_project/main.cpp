@@ -11,7 +11,10 @@ int main()
 {
     std::ifstream in("input.txt");
     std::ofstream ou("output.txt");
-    list lst{};
+    list lst, lst2;
+    lst.push_back(2);
+    lst2 = lst;
+    
     int _res{};
     while (in >> _res && _res != EOF)
         lst.push_back(_res);
@@ -19,10 +22,11 @@ int main()
     lst.remove_if([](int x) {return x < 10000; });
     // or
     lst.remove_if(is_even);
-    lst.print(ou, ' ');
+    //lst2.print(ou, ' ');
     
     lst.sort([](int x, int y) {return x > y; });
     // or
-    lst.sort(sort_even);
+    //lst.sort(sort_even);
+    lst.print(ou, ' ');
     /* and etc */
 }
