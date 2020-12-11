@@ -1,26 +1,27 @@
 #pragma once
-//TODO: replace the original int type to template - based type
-//then we will hold any type we ever want.
 namespace nonstl {
+	template <class _Ty>
 	class list
 	{
-	private:
+	private:	 //
 		struct Node
 		{
-			int m_val;
+			_Ty m_val;
 			Node* m_next, * m_prev;
-			Node(int param) { m_next  = m_prev = nullptr; m_val = param; }
+			Node(_Ty param) { m_next  = m_prev = nullptr; m_val = param; }
 			~Node() { m_next = m_prev = nullptr; };
 
 		};
 		/*We do not use third-party header files. 
 		If we want to use the initialization list and the compatibility of our iterator
 		with the STL iterators, we need to include additional headers. e.g. <iterator>, initializer_list*/
-		class custom_iter {
+		
+		class custom_iter { //: public std::iterator<std::forward_iterator_tag, _Ty&> {
 			Node* _node;
+			Node* GetNode() { return _node; }
 		public:
 			explicit custom_iter(Node* node = nullptr) : _node{ node } {}
-			int operator*() const { if (_node) return _node->m_val; }
+			_Ty operator*() const { if (_node) return _node->m_val; }
 			custom_iter& operator++() {
 				if (_node)
 					_node = _node->m_next;
@@ -29,6 +30,8 @@ namespace nonstl {
 			
 			bool operator!=(const custom_iter& other) const { return _node != other._node; }
 			bool operator==(const custom_iter& other) const { return !(*this != other); }
+			
+			friend class list<_Ty>;
 		};
 		
 		
@@ -45,20 +48,27 @@ namespace nonstl {
 	private:
 		bool ishead(Node* node) const { return m_head == node; }
 		bool istail(Node* node) const { return m_tail == node; }
+		Node* forTailIter(	custom_iter _Iter) {
+			Node* _node = _Iter.GetNode();
+			if (!_node)
+				_node = m_tail;
+
+			return _node;
+		}
 		//removes selected node
-		void remove(const Node* node)
+		void remove(Node* _node)
 		{
-			if (node->m_prev)
-				node->m_prev->m_next = node->m_next;
+			
+			if (_node->m_prev)
+				_node->m_prev->m_next = _node->m_next;
 			else
-				m_head = node->m_next;
-			if (node->m_next)
-				node->m_next->m_prev = node->m_prev;
+				m_head = _node->m_next;
+			if (_node->m_next)
+				_node->m_next->m_prev = _node->m_prev;
 			else
-				m_tail = node->m_prev;
+				m_tail = _node->m_prev;
 			m_size--;
-			delete node;
-			node = nullptr;
+			delete _node;
 		}
 		void swap(Node* _fir, Node* _sec)
 		{
@@ -68,7 +78,39 @@ namespace nonstl {
 			auto oFirVal = _fir->m_val;
 			_fir->m_val = _sec->m_val;
 			_sec->m_val = oFirVal;
-
+		}
+		void insert_after(Node* _Node, const _Ty& _Elem)
+		{
+			if (istail(_Node))
+				push_back(_Elem);
+			else {
+				auto nElem = new Node{ _Elem };
+				nElem->m_prev = _Node;
+				nElem->m_next = _Node->m_next;
+				_Node->m_next->m_prev = nElem;
+				_Node->m_next = nElem;
+				m_size++;
+			}
+		}
+		// ++
+		void insert_before(Node* _Node, const _Ty& _Elem)
+		{
+			if (ishead(_Node))
+				push_front(_Elem);
+			else
+				insert_after(_Node->m_prev, _Elem);
+		}
+		// ++
+		void remove_after(const Node* _Node)
+		{
+			if (_Node->m_next)
+				remove(_Node->m_next);
+		}
+		// ++
+		void remove_before(const Node* _Node)
+		{
+			if (_Node->m_prev)
+				remove(_Node->m_prev);
 		}
 
 	public:
@@ -77,6 +119,9 @@ namespace nonstl {
 		list(const list& other)
 		{
 			m_head = m_tail = nullptr;
+			if (other.size() == 0)
+				return;
+
 			for (auto _Elem : other)
 				push_back(_Elem);
 		}	//+
@@ -91,7 +136,12 @@ namespace nonstl {
 		}
 		
 		custom_iter begin() const { return  custom_iter{ m_head }; }
-		custom_iter end()   const { return  custom_iter{ m_tail->m_next }; }
+		custom_iter end()   const {
+			if (!m_tail)
+				return custom_iter{ m_tail };
+			else
+				return custom_iter{ m_tail->m_next };
+		}
 		
 		bool empty() const 
 		{ 
@@ -101,7 +151,7 @@ namespace nonstl {
 		{
 			return m_size;
 		}
-		
+		//++
 		void clear()
 		{
 			while (m_head) {
@@ -114,34 +164,16 @@ namespace nonstl {
 		//+
 		void pop_back()
 		{
-			if (m_tail) {
-				auto tmp = m_tail;
-				m_tail = m_tail->m_prev;
-				if (m_tail)
-					m_tail->m_next = nullptr;
-				else
-					m_head = nullptr;
-				delete tmp;
-			}
-			m_size -= 1;
+			remove(m_tail);
 		}
 		//+
 		void pop_front()
 		{
-			if (m_head) {
-				auto tmp = m_head;
-				m_head = m_head->m_next;
-				if (m_head)
-					m_head->m_prev = nullptr;
-				else
-					m_tail = nullptr;
-				delete tmp;
-			}
-			m_size -= 1;
+			remove(m_head);
 		}
 		// +
-		void push_front(int val) {
-			auto elem = new Node(val);
+		void push_front(_Ty _Val) {
+			auto elem = new Node(_Val);
 			elem->m_prev = nullptr;
 			elem->m_next = m_head;
 			if (m_head)
@@ -152,8 +184,8 @@ namespace nonstl {
 			m_size++;
 		}
 		// +
-		void push_back(int val) {
-			auto elem = new Node(val);
+		void push_back(_Ty _Val) {
+			auto elem = new Node(_Val);
 			elem->m_prev = m_tail;
 			elem->m_next = nullptr;
 			if (m_tail)
@@ -163,100 +195,77 @@ namespace nonstl {
 			m_tail = elem;
 			m_size++;
 		}
-		// + doesn't any secure checks
-		void insert(const size_t idx, int val) {
-			size_t i{ 0 }; auto tmp = m_head;
-			for (; tmp && i < idx; tmp = tmp->m_next, i++)
-				;
-			if (!tmp)
-				return;
 
-			m_size++;
-			if (!tmp->m_next) {
-				push_back(val);
+		// updated
+		void remove_after(custom_iter _Iter)
+		{
+			if (!_Iter.GetNode())
 				return;
-			}
-			if (!tmp->m_prev) {
-				push_front(val);
+			remove(_Iter.GetNode()->m_next);
+		}
+		// updated
+		void remove_before(custom_iter _Iter)
+		{
+			if (_Iter == this->begin())
 				return;
-			}
-			auto node			= new Node(val);
-			node->m_next		= tmp;
-			node->m_prev		= tmp->m_prev;
-			tmp->m_prev->m_next	= node;
-			tmp->m_prev			= node;	
+			remove(forTailIter(_Iter)->m_prev);
+		}
+		// ++
+		void insert(custom_iter _Iter, _Ty _Val) 
+		{
+			insert_before(forTailIter(_Iter), _Val);
 		}
 
-		// + original causes unbeh if tail doesn't exist
-		int& back() { return m_tail->m_val; }
-		// +
-		int const& back() const { return m_tail->m_val; }
-		// +
-		int& front() { return m_head->m_val; }
-		// +
-		int const& front() const { return m_head->m_val; }
-		// +
+		// ++ original causes unbeh if tail doesn't exist
+		_Ty& back() { return m_tail->m_val; }
+		// ++
+		_Ty const& back() const { return m_tail->m_val; }
+		// ++
+		_Ty& front() { return m_head->m_val; }
+		// ++
+		_Ty const& front() const { return m_head->m_val; }
+		// updated remove by prediction (lambda | pointer to function)
 		template <class predict>
-		void remove_if(predict pred)
+		void remove_if(predict _Pred)
 		{
 			auto _last = m_head;
 			while (_last) {
 				auto tmp = _last;
-				if (pred(_last->m_val)) {
+				if (_Pred(_last->m_val)) {
 					_last = _last->m_next;
 					remove(tmp);
 				} else	
 					_last = _last->m_next;
 			}
 		}
-		//+
-		void remove(const int& _elem)
+		//++
+		void remove(const _Ty& _Elem)
 		{
-			remove_if([&](int x) {return x == _elem; });
+			remove_if([&](_Ty x) {return x == _Elem; });
 		}
-		// +
-		void remove_after(const Node* node)
+		// ++
+		
+		// updated return iterator ( resulting or null )
+		custom_iter find(const _Ty& _Elem)
 		{
-			if (node->m_next)
-				remove(node->m_next);
-		}
-		// +
-		void remove_before(const Node* node)
-		{
-			if (node->m_prev)
-				remove(node->m_prev);
-		}
-		// +
-		int  findf(const int& _Elem)
-		{
-			size_t i{ 0 };
-			for (auto _begin = begin(); _begin != end(); ++_begin, i++)
+			for (auto _begin = begin(); _begin != end(); ++_begin)
 				if (*_begin == _Elem)
-					return i;
-			return -1;
+					return _begin;
+			return custom_iter();
 		}
-		// +
-		void insert_after(Node* node, const int& _Elem)
+		// ++
+		
+		// updated
+		void insert_after(custom_iter _Iter, const _Ty _Elem)
 		{
-			if (istail(node))
-				push_back(_Elem);
-			else {
-				auto nElem  = new Node{ _Elem };
-				nElem->m_prev = node;
-				nElem->m_next = node->m_next;
-				node->m_next  = nElem;
-				m_size++;
-			}
+			insert_after(forTailIter(_Iter), _Elem);
 		}
-		// +
-		void insert_before(Node* node, const int& _Elem)
+		// updated
+		void insert_before(custom_iter _Iter, const _Ty _Elem)
 		{
-			if (ishead(node))
-				push_front(_Elem);
-			else 
-				insert_after(node->m_prev, _Elem);
+			insert_before(forTailIter(_Iter), _Elem);
 		}
-		// +
+		// updated
 		void erase(size_t idx)
 		{
 			size_t i = 0;
@@ -267,6 +276,32 @@ namespace nonstl {
 				return;
 			remove(_begin);
 		}
+		// updated
+		void erase(custom_iter _Iter)
+		{
+			remove(forTailIter(_Iter));
+		}
+		// updated
+		void erase(custom_iter _First, custom_iter _Last)
+		{
+			if (_First == _Last) {
+				erase(_First);
+				return;
+			}
+			//swap locals yeah
+			if (*_First > *_Last) {
+				auto tmp = _Last.GetNode();
+				_Last = custom_iter{ _First.GetNode() };
+				_First = custom_iter{ tmp };
+			}
+
+			auto tmp = _First;
+			for (auto _it = _First; _it != _Last;) {
+				_it = tmp;
+				++tmp;
+				erase(_it);
+			}
+		}
 		//param 1: stream | param 2: sep
 		template <class _Stream, class _Separator>
 		void print(_Stream& _Io, const _Separator& _Sep) {
@@ -274,21 +309,25 @@ namespace nonstl {
 			for (auto elem : *this)
 				_Io << elem << _Sep;
 		}
-		//
+		// ++
 		void swap(list& other)
 		{
-			auto _tmpHead	  = this->m_head;
-			auto _tmpTail	  = this->m_tail;
-			this->m_head	  = other.m_head;
-			this->m_tail	  = other.m_tail;
-			other.m_head	  = _tmpHead;
-			other.m_tail	  = _tmpTail;
+			if (this != &other) {
+				auto _tmpHead = this->m_head;
+				auto _tmpTail = this->m_tail;
+				this->m_head = other.m_head;
+				this->m_tail = other.m_tail;
+				other.m_head = _tmpHead;
+				other.m_tail = _tmpTail;
+			}
 		}
 		
 		// insert sort-based sort
 		template <class _Predict >
 		void sort(_Predict _Pred)
 		{
+			if (m_size == 0) return;
+
 			auto _begin = m_head->m_next;
 			for (; _begin; _begin = _begin->m_next) {
 				auto _sorFornode = _begin;
@@ -302,7 +341,3 @@ namespace nonstl {
 
 
 }
-
-
-
-	
