@@ -281,7 +281,7 @@ namespace nonstl {
 		{
 			remove(forTailIter(_Iter));
 		}
-		// updated
+		// think about that
 		void erase(custom_iter _First, custom_iter _Last)
 		{
 			if (_First == _Last) {
@@ -304,8 +304,8 @@ namespace nonstl {
 		}
 		//param 1: stream | param 2: sep
 		template <class _Stream, class _Separator>
-		void print(_Stream& _Io, const _Separator& _Sep) {
-			if (m_size == 0) return;
+		void print(_Stream& _Io, const _Separator& _Sep) const {
+			if (m_size == 0) return; 
 			for (auto elem : *this)
 				_Io << elem << _Sep;
 		}

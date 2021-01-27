@@ -8,7 +8,7 @@ using namespace nonstl;
 using std::cout;
 int main()
 {      
-    auto print = [&](list<int> lst) { lst.print(cout, ' '); cout << '\n'; };
+    auto print = [](const list<int>& lst) { lst.print(cout, ' '); cout << '\n'; };
     // 1 3 4 2 5 6 8 7 9 10 11 13 12 14 15 0
     std::ifstream in("input.txt");
     nonstl::list<int> lst;
@@ -51,9 +51,11 @@ int main()
     lst.insert(std::begin(lst), -777);
     print(lst);
     // we can remove some vector of elements like this:
-    lst.erase(lst.find(8), lst.find(3));
-    print(lst);  
+    lst.sort([](int x, int y) { return x < y; });
+    print(lst);
+    lst.erase(lst.find(4), lst.find(8));
 
+    
     list<int> lst2 = lst;
     
     lst.clear();
