@@ -1,6 +1,7 @@
 # Double-linked list lab. 
-## **Author: Valery Akulenko. Last update : 01.12.2020**
-### Features: 
+## **Author: Valery Akulenko. Last update : 12.12.2020**
+### Features:
+*This list is outdated. Some features was added and rewritten.*
 * **without any includes**
 * **iterators :**
     - **begin**
